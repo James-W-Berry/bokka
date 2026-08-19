@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bokka strip harness</title>
+<style>
+  body { background: #f6f8fa; color: #1f2328; font-family: -apple-system, sans-serif; margin: 0; }
+  .fake-board { display: flex; gap: 12px; padding: 20px; }
+  [data-testid="board-view-column"] { background: #fff; border: 1px solid #d1d9e0; border-radius: 6px;
+    flex: 1; padding: 10px; min-height: 500px; }
+  h3 { margin: 0 0 10px; font-size: 14px; }
+  [data-testid="board-view-column-card"] { background: #fff; border: 1px solid #d1d9e0; border-radius: 6px;
+    padding: 8px; margin-bottom: 8px; font-size: 13px; box-shadow: 0 1px 0 rgba(31,35,40,0.04);
+    display: flex; align-items: center; gap: 6px; }
+  .IssueLabel { background: #ddf4ff; border-radius: 10px; padding: 1px 8px; font-size: 11px; }
+  img.avatar { width: 20px; height: 20px; border-radius: 50%; margin-left: auto; }
+</style>
+</head>
+<body>
+<!-- mimics GitHub Projects v2 board markup (data-testids, IssueLabel chips,
+     avatar imgs) so the DOM scraper is exercised end-to-end with no network -->
+<div class="fake-board">
+  <div data-testid="board-view-column">
+    <h3 data-testid="board-view-column-title">Todo</h3>
+    <div data-testid="board-view-column-card">Fix flaky auth test <span class="IssueLabel">sp:3</span>
+      <img class="avatar" alt="aiko" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%23c94040'/%3E%3C/svg%3E" /></div>
+    <div data-testid="board-view-column-card">Migrate billing cron <span class="IssueLabel">sp:5</span>
+      <img class="avatar" alt="ben" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%232e4372'/%3E%3C/svg%3E" /></div>
+    <div data-testid="board-view-column-card">Rate-limit webhooks <span class="IssueLabel">sp:13</span>
+      <img class="avatar" alt="chen" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%235a7a4a'/%3E%3C/svg%3E" /></div>
+    <div data-testid="board-view-column-card">Spike: new editor (unassigned, no estimate)</div>
+  </div>
+  <div data-testid="board-view-column">
+    <h3 data-testid="board-view-column-title">In progress</h3>
+    <div data-testid="board-view-column-card">Refactor sync engine <span class="IssueLabel">sp:8</span>
+      <img class="avatar" alt="chen" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%235a7a4a'/%3E%3C/svg%3E" /></div>
+    <div data-testid="board-view-column-card">Ship dark mode — Estimate: 21
+      <img class="avatar" alt="chen" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%235a7a4a'/%3E%3C/svg%3E" /></div>
+    <div data-testid="board-view-column-card">Perf audit <span class="IssueLabel">sp:5</span>
+      <img class="avatar" alt="aiko" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%23c94040'/%3E%3C/svg%3E" /></div>
+  </div>
+  <div data-testid="board-view-column">
+    <h3 data-testid="board-view-column-title">Done</h3>
+    <div data-testid="board-view-column-card">Bump deps <span class="IssueLabel">sp:2</span>
+      <img class="avatar" alt="ben" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%232e4372'/%3E%3C/svg%3E" /></div>
+    <div data-testid="board-view-column-card">Fix onboarding email <span class="IssueLabel">sp:5</span>
+      <img class="avatar" alt="aiko" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%23c94040'/%3E%3C/svg%3E" /></div>
+  </div>
+</div>
+<script>
+  // no repo, no token — the strip must appear purely from scraping the board above
+  localStorage.setItem('bokka-ext', JSON.stringify({ maxPorters: 8 }))
+  // ?filter-test → simulate editing the logins filter in options after load;
+  // the strip must narrow to just chen within one ~5s settings poll, no refresh
+  if (new URLSearchParams(location.search).has('filter-test')) {
+    setTimeout(() => {
+      localStorage.setItem('bokka-ext', JSON.stringify({ maxPorters: 8, logins: 'chen' }))
+    }, 4000)
+  }
+  // ?fake → skip scraping/network entirely and inject canned members
+  if (new URLSearchParams(location.search).has('fake')) {
+    window.__BOKKA_FAKE_MEMBERS__ = [
+      { login: 'aiko', openPoints: 6, openIssues: 2, deliveredPoints: 5, deliveredIssues: 2 },
+      { login: 'ben', openPoints: 16, openIssues: 5, deliveredPoints: 0, deliveredIssues: 0 },
+      { login: 'chen', openPoints: 22, openIssues: 7, deliveredPoints: 8, deliveredIssues: 3 },
+      { login: 'devi', openPoints: 30, openIssues: 9, deliveredPoints: 3, deliveredIssues: 1 },
+      { login: 'emi', openPoints: 44, openIssues: 12, deliveredPoints: 0, deliveredIssues: 0 },
+      { login: 'farid', openPoints: 0, openIssues: 0, deliveredPoints: 12, deliveredIssues: 4 },
+    ]
+  }
+</script>
+<script type="module" src="/extension/content.ts"></script>
+</body>
+</html>

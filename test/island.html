@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bokka JSON-island harness</title>
+<style>body { background: #f6f8fa; font-family: -apple-system, sans-serif; padding: 20px; }</style>
+</head>
+<body>
+<h2>Projects v2 stand-in (no board DOM — data only in memex islands)</h2>
+<p>Structure mirrors a real /orgs/…/projects/N/views/N page: columns in
+<code>#memex-columns-data</code> (a bare array that never mentions "memexProject"),
+items in <code>#memex-paginated-items-data</code>, estimate field named <b>Story Points</b>.</p>
+<p>The saved view (memex-views island) carries filter <code>-is:draft</code>, applied by default.</p>
+<p>Expected (no params — saved filter applies): aiko 12/24 · ben 4/24 + 5 delivered · NO Unassigned → pill 16pt.</p>
+<p>With <code>?filterQuery=</code> (explicit empty — overrides saved filter): Unassigned 13/24 appears → pill 29pt.</p>
+<p>With <code>?filterQuery=sprint:@current</code>: only ben's done item → ben 0/24 + 5 delivered.</p>
+<p>With <code>?filterQuery=-is:draft&amp;sliceBy[value]=aiko</code>: only aiko's items → aiko 12/24, ben 4/24, no Unassigned.</p>
+
+<script type="application/json" id="memex-columns-data">
+[
+  { "id": "Title", "name": "Title", "dataType": "title", "userDefined": false },
+  { "id": "Assignees", "name": "Assignees", "dataType": "assignees", "userDefined": false },
+  { "id": "Status", "name": "Status", "dataType": "singleSelect", "userDefined": false,
+    "settings": { "options": [
+      { "id": "opt-todo", "name": "Todo", "color": "GRAY" },
+      { "id": "opt-wip", "name": "In Progress", "color": "YELLOW" },
+      { "id": "opt-review", "name": "In Review", "color": "BLUE" },
+      { "id": "opt-done", "name": "Done", "color": "GREEN" }
+    ] } },
+  { "id": 90210, "name": "Story Points", "dataType": "number", "userDefined": true },
+  { "id": 90212, "name": "Sprint", "dataType": "iteration", "userDefined": true,
+    "settings": { "configuration": {
+      "iterations": [
+        { "id": "it-next", "title": "Sprint 32", "startDate": "2030-01-01", "duration": 14 }
+      ],
+      "completedIterations": [
+        { "id": "it-cur", "title": "Sprint 31", "startDate": "2020-01-01", "duration": 3650 }
+      ]
+    } } },
+  { "id": 90211, "name": "Size", "dataType": "singleSelect", "userDefined": true,
+    "settings": { "options": [
+      { "id": "sz-s", "name": "S" },
+      { "id": "sz-m", "name": "M" },
+      { "id": "sz-xl", "name": "XL" }
+    ] } }
+]
+</script>
+
+<script type="application/json" id="memex-paginated-items-data">
+{
+  "groups": [
+    { "groupId": "g-todo", "groupValue": "Todo" },
+    { "groupId": "g-wip", "groupValue": "In Progress" },
+    { "groupId": "g-done", "groupValue": "Done" }
+  ],
+  "groupedItems": [
+    { "groupId": "g-todo", "items": [
+      { "id": 1, "contentType": "Issue", "memexProjectColumnValues": [
+        { "memexProjectColumnId": "Assignees", "value": [ { "id": 11, "login": "aiko" } ] },
+        { "memexProjectColumnId": "Status", "value": { "id": "opt-todo" } },
+        { "memexProjectColumnId": 90210, "value": { "value": 8 } },
+        { "memexProjectColumnId": 90212, "value": { "id": "it-next" } }
+      ] },
+      { "id": 4, "contentType": "DraftIssue", "memexProjectColumnValues": [
+        { "memexProjectColumnId": "Labels", "value": [ { "name": "sp:13", "color": "1d76db" } ] },
+        { "memexProjectColumnId": "Status", "value": { "id": "opt-todo" } },
+        { "memexProjectColumnId": 90212, "value": { "id": "it-next" } }
+      ] }
+    ] },
+    { "groupId": "g-wip", "items": [
+      { "id": 2, "contentType": "Issue", "memexProjectColumnValues": [
+        { "memexProjectColumnId": "Assignees", "value": [ { "id": 12, "login": "ben" }, { "id": 11, "login": "aiko" } ] },
+        { "memexProjectColumnId": "Status", "value": { "id": "opt-review" } },
+        { "memexProjectColumnId": 90211, "value": { "id": "sz-xl" } },
+        { "memexProjectColumnId": 90212, "value": { "id": "it-next" } }
+      ] }
+    ] },
+    { "groupId": "g-done", "items": [
+      { "id": 3, "contentType": "Issue", "memexProjectColumnValues": [
+        { "memexProjectColumnId": "Assignees", "value": [ { "id": 12, "login": "ben" } ] },
+        { "memexProjectColumnId": "Status", "value": { "id": "opt-done" } },
+        { "memexProjectColumnId": 90210, "value": { "value": 5 } },
+        { "memexProjectColumnId": 90212, "value": { "id": "it-cur" } }
+      ] }
+    ] }
+  ],
+  "slices": [],
+  "totalCount": 4
+}
+</script>
+
+<script type="application/json" id="memex-views">
+[
+  { "id": 301, "number": 3, "name": "Sprint Board", "layout": "board_layout",
+    "filter": "-is:draft" }
+]
+</script>
+
+<script>localStorage.setItem('bokka-ext', JSON.stringify({ maxPorters: 8 }))</script>
+<script type="module" src="/extension/content.ts"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bokka settings</title>
+<style>
+  :root {
+    --ink: #3b3020; --ink-soft: #6b5b40; --wood: #5a4632; --heading: #8a5a2b;
+    --panel: rgba(255, 251, 240, 0.93); --field: #fffdf4;
+    --accent: #e0a33f; --ok: #4e7a3a; --err: #9c2b26;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { color: var(--ink); font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+         background: #8ec9e8; min-height: 100vh; }
+  #scene { position: fixed; inset: 0; width: 100vw; height: 100vh;
+           image-rendering: pixelated; z-index: 0; }
+  .wrap { position: relative; z-index: 1; max-width: 520px; margin: 0 auto;
+          padding: 30px 20px 140px; }
+  header { display: flex; align-items: center; gap: 14px; }
+  #logo svg { display: block; filter: drop-shadow(1px 2px 0 rgba(59,48,32,0.35)); }
+  h1 { font-size: 28px; letter-spacing: 7px; color: #fffdf4; margin: 0;
+       text-shadow: 2px 2px 0 var(--wood); }
+  .sub { color: #fffdf4; text-shadow: 1px 1px 0 var(--wood); font-size: 12px;
+         margin: 2px 0 20px 48px; letter-spacing: 2px; }
+  section { background: var(--panel); border: 3px solid var(--wood); border-radius: 6px;
+            box-shadow: 0 4px 0 rgba(59,48,32,0.35); padding: 14px 16px 16px;
+            margin-bottom: 16px; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+       color: var(--heading); margin: 0 0 4px; }
+  .hint { color: var(--ink-soft); font-size: 11px; line-height: 1.5; margin: 4px 0 10px; }
+  label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+          color: var(--ink-soft); margin: 12px 0 4px; }
+  input { width: 100%; background: var(--field); border: 2px solid var(--wood);
+          border-radius: 4px; color: var(--ink); font: inherit; padding: 8px 9px; }
+  input::placeholder { color: #b3a88f; }
+  input:focus { outline: none; border-color: var(--accent);
+                box-shadow: 0 0 0 2px rgba(224,163,63,0.35); }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; min-width: 0; }
+  .actions { display: flex; align-items: center; gap: 12px; }
+  button { background: var(--accent); border: 3px solid var(--wood); border-radius: 6px;
+           color: #2f2415; font: inherit; font-weight: 700; padding: 10px 24px;
+           cursor: pointer; box-shadow: 0 3px 0 var(--wood); }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--wood); }
+  #status { color: var(--ok); font-weight: 700; text-shadow: 1px 1px 0 #fffdf4; }
+  footer { background: rgba(255, 251, 240, 0.85); border: 2px solid var(--wood);
+           border-radius: 6px; color: var(--ink-soft); font-size: 11px;
+           line-height: 1.6; margin-top: 18px; padding: 10px 12px; }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div class="wrap">
+  <header><span id="logo"></span><h1>BOKKA</h1></header>
+  <p class="sub">sprint porters</p>
+
+  <section>
+    <h2>Team display</h2>
+    <p class="hint">Capacity is the sprint-point load a porter carries comfortably —
+    past it they struggle, past 1.5× they're flattened.</p>
+    <div class="row">
+      <div><label for="capacity">Capacity (pts)</label><input id="capacity" type="number" min="1" /></div>
+      <div><label for="sprintDays">Sprint days</label><input id="sprintDays" type="number" min="1" /></div>
+      <div><label for="defaultPointsPerIssue">Pts/ticket fallback</label><input id="defaultPointsPerIssue" type="number" min="1" /></div>
+    </div>
+    <div class="row">
+      <div><label for="maxPorters">Max porters shown</label><input id="maxPorters" type="number" min="1" max="20" /></div>
+      <div><label for="logins">Only these logins (optional)</label><input id="logins" placeholder="alice, bob" /></div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button id="save">Save</button><span id="status"></span>
+  </div>
+
+  <footer>Changes reach open tabs within ~5 seconds. On the strip: click the pill to
+  hide/show porters, Alt+click to open this page, Shift+click to copy a debug report.
+  Points come from a Story&nbsp;Points/Estimate field, sizes (S/M/L), or labels like
+  <b>sp:3</b>.</footer>
+</div>
+<script src="options.js"></script>
+</body>
+</html>

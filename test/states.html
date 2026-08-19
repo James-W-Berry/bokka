@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Bokka state gallery</title>
+<style>
+  body { background: #17131f; margin: 20px; font-family: monospace; color: #e8e2d8; display: flex; flex-wrap: wrap; gap: 16px; }
+  .cell { text-align: center; }
+  canvas { image-rendering: pixelated; width: 210px; height: 300px; background: #241e33; }
+</style>
+</head>
+<body>
+<script type="module">
+import { drawPorter, porterState, STATE_LABEL, LOGICAL_W, LOGICAL_H } from '/src/porter/porter.ts'
+
+const cases = [
+  { points: 0, capacity: 24 },
+  { points: 6, capacity: 24 },
+  { points: 14, capacity: 24 },
+  { points: 22, capacity: 24 },
+  { points: 32, capacity: 24 },
+  { points: 44, capacity: 24 },
+  { points: 0, capacity: 24, celebrate: true },
+]
+for (const c of cases) {
+  const cell = document.createElement('div')
+  cell.className = 'cell'
+  const canvas = document.createElement('canvas')
+  canvas.width = LOGICAL_W
+  canvas.height = LOGICAL_H
+  const label = document.createElement('div')
+  const st = c.celebrate ? 'celebrate' : porterState(c.points, c.capacity)
+  label.textContent = `${c.points}pts — ${STATE_LABEL[st]}`
+  cell.append(canvas, label)
+  document.body.append(cell)
+  const ctx = canvas.getContext('2d')
+  drawPorter(ctx, { ...c, t: 0.9, seed: 0 })
+}
+window.__done = true
+</script>
+</body>
+</html>
