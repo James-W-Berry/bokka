@@ -55,7 +55,9 @@ async function ghFetch(path: string, token?: string): Promise<unknown> {
     },
   })
   if (!res.ok) {
-    const detail = res.status === 403 ? ' (rate limit? add a token)' : ''
+    // callers add their own remedy — the extension has no token field, the
+    // web app does
+    const detail = res.status === 403 ? ' (rate limited)' : ''
     throw new Error(`GitHub ${res.status} on ${path}${detail}`)
   }
   return res.json()

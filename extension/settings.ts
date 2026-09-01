@@ -2,8 +2,6 @@
 // chrome.storage is unavailable (e.g. the test harness page served by vite).
 
 export interface Settings {
-  repo: string
-  token: string
   capacity: number
   sprintDays: number
   defaultPointsPerIssue: number
@@ -13,8 +11,6 @@ export interface Settings {
 }
 
 export const DEFAULTS: Settings = {
-  repo: '',
-  token: '',
   capacity: 24,
   sprintDays: 14,
   defaultPointsPerIssue: 3,
@@ -56,10 +52,9 @@ export function onSettingsChanged(fn: () => void): void {
 }
 
 export function openOptions(): void {
-  // web pages may not open extension URLs directly — ask the background to do it
+  // web pages may not open extension URLs directly — ask the background to do
+  // it. No-op in the test harness, which has no extension to talk to.
   if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
     chrome.runtime.sendMessage({ type: 'bokka:open-options' })
-  } else {
-    alert('Bokka test harness: set settings via localStorage key "bokka-ext".')
   }
 }
