@@ -1,6 +1,6 @@
 # Bokka — Privacy Policy
 
-_Last updated: 2026-08-31_
+_Last updated: 2026-09-01_
 
 **Bokka does not collect, transmit, sell, or share any personal data.** It has no
 backend, no analytics, no telemetry, no advertising, and no remote code. Every
