@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Bokka — sprint porters",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Pixel porters walk along the bottom of GitHub carrying your team's sprint points. Overload them at your peril.",
   "permissions": ["storage"],
   "host_permissions": ["https://api.github.com/*"],

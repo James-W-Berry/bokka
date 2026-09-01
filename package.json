@@ -1,7 +1,7 @@
 {
   "name": "bokka",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Bokka \u2014 a pixel-art sprint-load visualizer where every teammate is a mountain porter carrying their sprint points as cargo.",
   "license": "MIT",
   "author": "James Berry",
