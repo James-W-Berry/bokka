@@ -1,7 +1,7 @@
 // Bundles the browser extension into dist-extension/ (Chrome) and
 // dist-extension-firefox/ (Firefox/Zen), and rasterizes the shared logo
 // (src/porter/logo.ts) into the manifest icon PNGs.
-// Uses esbuild, which ships as a dependency of vite.
+// Uses esbuild, pinned in devDependencies.
 import { build } from 'esbuild'
 import { cpSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { deflateSync, deflateRawSync } from 'node:zlib'
@@ -112,19 +112,25 @@ manifest.version = pkg.version
 manifest.icons = Object.fromEntries(ICON_SIZES.map((s) => [String(s), `icon${s}.png`]))
 writeFileSync('dist-extension/manifest.json', JSON.stringify(manifest, null, 2))
 
-// Firefox variant: gecko id is required to load MV3, host permissions are
-// user-granted there, and backgrounds run as event pages not service workers.
-// The id is permanent once AMO has seen it — do not change it after publishing.
+// Firefox variant: gecko id is required to load MV3, and backgrounds run as
+// event pages not service workers. The id is permanent once AMO has seen it —
+// do not change it after publishing.
+//
+// No gecko_android key: the bottom-fixed strip is untested against mobile
+// GitHub, and claiming Android now would strand those installs if it has to be
+// withdrawn. Without that key the Android floor is inferred from
+// strict_min_version, and data_collection_permissions only exists from 142 on
+// Android (140 on desktop) — so the floor is 142, which keeps both satisfied
+// with one number. Android availability itself is a listing setting on AMO.
 const firefox = {
   ...manifest,
   background: { scripts: ['background.js'] },
   browser_specific_settings: {
     gecko: {
       id: '{c78c282b-ed96-4577-9b3f-d096dc986f07}',
-      strict_min_version: '140.0',
+      strict_min_version: '142.0',
       data_collection_permissions: { required: ['none'] },
     },
-    gecko_android: { strict_min_version: '142.0' },
   },
 }
 writeFileSync('dist-extension-firefox/manifest.json', JSON.stringify(firefox, null, 2))
@@ -230,8 +236,8 @@ for (const [dir, label] of [
   console.log(`${out} — ${n} files`)
 }
 
-// AMO requires the source for any bundled/machine-generated script, which
-// content.js is (esbuild). Reviewers rebuild from this zip; see README.
+// content.js is an esbuild bundle, so a store review that requires source for
+// machine-generated scripts can rebuild the package from this archive.
 const SOURCE_SKIP = new Set([
   'node_modules',
   'dist',
