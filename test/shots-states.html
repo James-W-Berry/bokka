@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bokka store shot — load ladder</title>
+<!-- Store-screenshot harness: the full load ladder in one 1280x800 frame,
+     rendered straight from src/porter/porter.ts. Static poses, fixed seeds,
+     so the shot is reproducible. -->
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: #17131f; color: #e8e2d8; width: 1280px; height: 800px;
+    font: 14px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; overflow: hidden;
+  }
+  h1 { margin: 0 0 6px; font-size: 30px; font-weight: 600; letter-spacing: -.01em; }
+  p.sub { margin: 0 0 34px; color: #a89fb8; font-size: 15px; }
+  .ladder { display: flex; align-items: flex-end; gap: 8px; }
+  .cell { text-align: center; width: 168px; }
+  canvas { image-rendering: pixelated; width: 154px; height: 220px; display: block; margin: 0 auto; }
+  .pts { margin-top: 14px; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .state { font-size: 12.5px; color: #a89fb8; margin-top: 1px; }
+  .cell.over .state { color: #f0a05a; }
+  .cell.flat .state { color: #e8685a; }
+  .cell.done .state { color: #7fc98a; }
+  .rule { width: 1120px; height: 1px; background: #2e2740; margin: 30px 0 0; }
+  .foot { margin-top: 14px; font-size: 13px; color: #7d7490; }
+</style>
+</head>
+<body>
+<h1>Every teammate carries their sprint points</h1>
+<p class="sub">Capacity 24 points. The heavier the load, the worse the walk.</p>
+<div class="ladder" id="ladder"></div>
+<div class="rule"></div>
+<div class="foot">Load is read straight off your GitHub project board — no setup, no token.</div>
+
+<script type="module">
+import { drawPorter, porterState, STATE_LABEL, LOGICAL_W, LOGICAL_H } from '/src/porter/porter.ts'
+
+const CAP = 24
+const CASES = [
+  { points: 0,  seed: 3 },
+  { points: 7,  seed: 1 },
+  { points: 15, seed: 5 },
+  { points: 23, seed: 2 },
+  { points: 31, seed: 4, cls: 'over' },
+  { points: 44, seed: 6, cls: 'flat' },
+  { points: 0,  seed: 0, celebrate: true, cls: 'done', label: 'Delivered!' },
+]
+
+const ladder = document.getElementById('ladder')
+for (const c of CASES) {
+  const cell = document.createElement('div')
+  cell.className = 'cell' + (c.cls ? ' ' + c.cls : '')
+  const canvas = document.createElement('canvas')
+  canvas.width = LOGICAL_W
+  canvas.height = LOGICAL_H
+  const pts = document.createElement('div')
+  pts.className = 'pts'
+  pts.textContent = c.celebrate ? '18 shipped' : `${c.points} pts`
+  const state = document.createElement('div')
+  state.className = 'state'
+  state.textContent = c.label ?? STATE_LABEL[porterState(c.points, CAP)]
+  cell.append(canvas, pts, state)
+  ladder.append(cell)
+  drawPorter(canvas.getContext('2d'), {
+    points: c.points, capacity: CAP, t: 0.9, seed: c.seed, celebrate: !!c.celebrate,
+  })
+}
+window.__done = true
+</script>
+</body>
+</html>

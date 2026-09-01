@@ -1,7 +1,7 @@
-# Bokka 歩荷
+# Bokka
 
-A pixel-art sprint-load visualizer. Every teammate is a **bokka** — one of Japan's
-mountain porters who haul supplies to remote huts on wooden pack frames — and every
+A pixel-art sprint-load visualizer. Every teammate is a **bokka** — a mountain
+porter who hauls supplies to remote huts on a wooden pack frame — and every
 sprint point is cargo on their back. As load passes team capacity, the porter's
 animations get more dramatic, all the way to being flattened under the pile.
 
@@ -40,9 +40,9 @@ you overdo it, and celebrate when their issues get closed.
      (`-is:pr`, `status:`/`-status:"X"`, `Type:`, iteration fields like
      `sprint:@next`/`@current`) filter the porters the way they filter the
      board; unknown predicates fail open rather than hiding anyone.
-   If neither strategy can read a project page, the pill shows `歩荷 ?` —
-   clicking it copies a structure fingerprint (element/test-id counts only, no
-   ticket content) to paste into a bug report so scraping can be fixed.
+   If neither strategy can read a project page, the pill shows `?` — clicking
+   it copies a structure fingerprint (element/test-id counts only, no ticket
+   content) to paste into a bug report so scraping can be fixed.
 2. **Repo pages** — infers `owner/repo` from the URL and uses the public REST
    API (a token is only ever needed here, for private repos, as an optional
    setting).
@@ -53,7 +53,10 @@ npm install
 npm run build:ext
 ```
 
-This produces two load-ready builds:
+This produces two load-ready builds plus the store zips in `dist-packages/`
+(`bokka-chrome-<version>.zip`, `bokka-firefox-<version>.zip`, and
+`bokka-source-<version>.zip` for AMO review). The version comes from
+`package.json` and is stamped into both manifests — bump it there only.
 
 - **Chrome / Edge**: `chrome://extensions` → Developer mode → **Load unpacked**
   → `dist-extension/`
@@ -68,7 +71,7 @@ The strip:
 
 - shows the top-loaded porters (configurable count, or filter to specific logins
   via Alt+click on the pill → settings)
-- is click-through (`pointer-events: none`) except for the 歩荷 pill, which
+- is click-through (`pointer-events: none`) except for the Bokka pill, which
   toggles visibility and shows the team's total points in transit
 - triggers a jumping celebration when a porter's cargo gets delivered (e.g. a
   card dragged to Done)
@@ -115,6 +118,24 @@ Both are shared verbatim between the web app and the extension. Next targets:
 3. **Projects v2 Estimate field** — GraphQL adapter for teams that use the
    native estimate instead of point labels
 
+## Publishing
+
+`npm run build:ext` also writes store-ready zips to `dist-packages/`:
+
+| File | Goes to |
+| --- | --- |
+| `bokka-chrome-<version>.zip` | Chrome Web Store, and Edge Add-ons unchanged |
+| `bokka-firefox-<version>.zip` | Firefox AMO (listed, or unlisted for a signed self-hosted `.xpi`) |
+| `bokka-source-<version>.zip` | AMO's mandatory source upload — `content.js` is an esbuild bundle, so reviewers must be able to rebuild it |
+
+Archives use fixed timestamps, so a rebuild of the same commit is byte-identical
+— which is what lets an AMO reviewer verify the source zip against the package.
+
+Listing copy, permission justifications and the submission checklist live in
+[STORE-LISTING.md](STORE-LISTING.md); the policy both stores require is
+[PRIVACY.md](PRIVACY.md) (Chrome needs it at a public URL, because the optional
+GitHub token counts as sensitive data).
+
 ## Dev checks
 
 ```sh
@@ -124,4 +145,6 @@ npx tsx test/sync-smoke.ts    # live GitHub sync smoke test
 npm run dev  →  /test/states.html
 # extension strip over a fake board (live data, no extension install needed):
 npm run dev  →  /test/strip.html
+# store screenshots (1280x800) into screenshots/, fictional team, no network:
+npm run shots
 ```

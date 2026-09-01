@@ -3,8 +3,8 @@
 // (src/porter/logo.ts) into the manifest icon PNGs.
 // Uses esbuild, which ships as a dependency of vite.
 import { build } from 'esbuild'
-import { cpSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
-import { deflateSync } from 'node:zlib'
+import { cpSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { deflateSync, deflateRawSync } from 'node:zlib'
 import { pathToFileURL } from 'node:url'
 
 const targets = [
@@ -96,18 +96,31 @@ for (const size of ICON_SIZES) {
 
 // ---- manifests ------------------------------------------------------------
 
+// package.json is the single source of truth for the version. Both stores
+// reject an upload whose version already exists, so it gets bumped in one
+// place and stamped into both manifests here.
+const pkg = JSON.parse(readFileSync('package.json', 'utf8'))
+if (!/^\d+(\.\d+){0,3}$/.test(pkg.version)) {
+  throw new Error(
+    `package.json version "${pkg.version}" is not a valid extension version ` +
+      '(1-4 dot-separated integers, no pre-release suffix)',
+  )
+}
+
 const manifest = JSON.parse(readFileSync('extension/manifest.json', 'utf8'))
+manifest.version = pkg.version
 manifest.icons = Object.fromEntries(ICON_SIZES.map((s) => [String(s), `icon${s}.png`]))
 writeFileSync('dist-extension/manifest.json', JSON.stringify(manifest, null, 2))
 
 // Firefox variant: gecko id is required to load MV3, host permissions are
-// user-granted there, and backgrounds run as event pages not service workers
+// user-granted there, and backgrounds run as event pages not service workers.
+// The id is permanent once AMO has seen it — do not change it after publishing.
 const firefox = {
   ...manifest,
   background: { scripts: ['background.js'] },
   browser_specific_settings: {
     gecko: {
-      id: 'bokka@rivet.work',
+      id: '{c78c282b-ed96-4577-9b3f-d096dc986f07}',
       strict_min_version: '140.0',
       data_collection_permissions: { required: ['none'] },
     },
@@ -124,3 +137,109 @@ for (const t of targets) {
   cpSync('extension/options.html', `${t.dir}/options.html`)
   console.log(`${t.dir}/ ready — ${t.note}`)
 }
+
+// ---- store packages -------------------------------------------------------
+// Chrome, Edge and AMO all take a plain zip with manifest.json at the root.
+// Hand-rolled like the PNG encoder above so the build stays dependency-free;
+// fixed DOS timestamps make the archives byte-reproducible across builds.
+
+const DOS_TIME = 0 // 00:00:00
+const DOS_DATE = 0x21 // 1980-01-01, the DOS epoch
+
+function collectFiles(dir, prefix = '', skip = () => false) {
+  const out = []
+  const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))
+  for (const e of entries) {
+    if (e.name.startsWith('.') || skip(prefix + e.name)) continue
+    if (e.isDirectory()) out.push(...collectFiles(`${dir}/${e.name}`, `${prefix}${e.name}/`, skip))
+    else if (e.isFile()) out.push({ name: prefix + e.name, data: readFileSync(`${dir}/${e.name}`) })
+  }
+  return out
+}
+
+function writeZip(outfile, files) {
+  const locals = []
+  const central = []
+  let offset = 0
+  for (const f of files) {
+    const name = Buffer.from(f.name, 'utf8')
+    const data = deflateRawSync(f.data, { level: 9 })
+    const crc = crc32(f.data)
+
+    const local = Buffer.alloc(30)
+    local.writeUInt32LE(0x04034b50, 0)
+    local.writeUInt16LE(20, 4) // version needed to extract
+    local.writeUInt16LE(0, 6) // flags
+    local.writeUInt16LE(8, 8) // deflate
+    local.writeUInt16LE(DOS_TIME, 10)
+    local.writeUInt16LE(DOS_DATE, 12)
+    local.writeUInt32LE(crc, 14)
+    local.writeUInt32LE(data.length, 18)
+    local.writeUInt32LE(f.data.length, 22)
+    local.writeUInt16LE(name.length, 26)
+    local.writeUInt16LE(0, 28) // extra field length
+    locals.push(local, name, data)
+
+    const cd = Buffer.alloc(46)
+    cd.writeUInt32LE(0x02014b50, 0)
+    cd.writeUInt16LE(20, 4) // version made by
+    cd.writeUInt16LE(20, 6) // version needed to extract
+    cd.writeUInt16LE(0, 8)
+    cd.writeUInt16LE(8, 10)
+    cd.writeUInt16LE(DOS_TIME, 12)
+    cd.writeUInt16LE(DOS_DATE, 14)
+    cd.writeUInt32LE(crc, 16)
+    cd.writeUInt32LE(data.length, 20)
+    cd.writeUInt32LE(f.data.length, 24)
+    cd.writeUInt16LE(name.length, 28)
+    cd.writeUInt16LE(0, 30) // extra
+    cd.writeUInt16LE(0, 32) // comment
+    cd.writeUInt16LE(0, 34) // disk number
+    cd.writeUInt16LE(0, 36) // internal attrs
+    cd.writeUInt32LE((0o100644 << 16) >>> 0, 38) // external attrs: regular file, 0644
+    cd.writeUInt32LE(offset, 42)
+    central.push(cd, name)
+
+    offset += local.length + name.length + data.length
+  }
+
+  const cdBuf = Buffer.concat(central)
+  const eocd = Buffer.alloc(22)
+  eocd.writeUInt32LE(0x06054b50, 0)
+  eocd.writeUInt16LE(0, 4) // this disk
+  eocd.writeUInt16LE(0, 6) // disk with central directory
+  eocd.writeUInt16LE(files.length, 8)
+  eocd.writeUInt16LE(files.length, 10)
+  eocd.writeUInt32LE(cdBuf.length, 12)
+  eocd.writeUInt32LE(offset, 16)
+  eocd.writeUInt16LE(0, 20) // comment length
+  writeFileSync(outfile, Buffer.concat([...locals, cdBuf, eocd]))
+  return files.length
+}
+
+const PKG_DIR = 'dist-packages'
+rmSync(PKG_DIR, { recursive: true, force: true })
+mkdirSync(PKG_DIR, { recursive: true })
+
+for (const [dir, label] of [
+  ['dist-extension', 'chrome'],
+  ['dist-extension-firefox', 'firefox'],
+]) {
+  const out = `${PKG_DIR}/bokka-${label}-${pkg.version}.zip`
+  const n = writeZip(out, collectFiles(dir))
+  console.log(`${out} — ${n} files`)
+}
+
+// AMO requires the source for any bundled/machine-generated script, which
+// content.js is (esbuild). Reviewers rebuild from this zip; see README.
+const SOURCE_SKIP = new Set([
+  'node_modules',
+  'dist',
+  'dist-extension',
+  'dist-extension-firefox',
+  'screenshots',
+  PKG_DIR,
+])
+const sourceOut = `${PKG_DIR}/bokka-source-${pkg.version}.zip`
+const sourceFiles = collectFiles('.', '', (rel) => SOURCE_SKIP.has(rel.split('/')[0]))
+console.log(`${sourceOut} — ${writeZip(sourceOut, sourceFiles)} files (AMO source upload)`)

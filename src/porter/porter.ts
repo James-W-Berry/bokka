@@ -1,5 +1,5 @@
 // Bokka porter engine v2 — framework-free 2.5D pixel-art renderer.
-// A traditional Japanese mountain porter (bokka / 歩荷) drawn with 4-shade
+// A mountain porter hauling cargo on a pack frame, drawn with 4-shade
 // material ramps, a top-left light source, articulated limbs, and animations
 // that escalate with load: bouncy walk → trudge → panting + sweat → trembling
 // with stumble events → flattened under the pile. Pure canvas 2D, zero
@@ -127,17 +127,47 @@ export function drawPorter(ctx: CanvasRenderingContext2D, o: PorterOptions): voi
 
 // ---------------------------------------------------------------- ground
 
-const GRASS = { soil: '#3c5a33', base: '#4e7a3a', blade: '#5d9948', bladeLt: '#7fb35e', tip: '#a4d47c' }
+const GRASS = { deep: '#2c4426', soil: '#3c5a33', base: '#4e7a3a', blade: '#5d9948', bladeLt: '#7fb35e', tip: '#a4d47c' }
+
+const BLADE_ROWS = 5 // logical rows of blade + tip above the soil line
+
+// The one grass renderer, shared by the patch under a single porter and the
+// extension's full-width strip so both read as the same ground. `gust` shifts
+// the tips; the per-porter patch passes none, since a patch that breathed on
+// its own would drift out of step with the band behind it.
+function grassInto(p: Px, top: number, width: number, height: number, t: number, gust: number) {
+  const soil = top + BLADE_ROWS
+  const depth = top + height - soil
+  p.r(0, soil, width, depth, GRASS.soil)
+  p.r(0, soil, width, 1, GRASS.base)
+  // the strip's band is deeper than a porter's own patch because it has to
+  // reach the window edge; shade the bottom so it reads as ground, not a slab
+  if (depth > 3) p.r(0, top + height - 2, width, 2, GRASS.deep)
+  for (let x = 0; x < width; x += 3) {
+    const h = 2 + ((x * 7) % 3)
+    const sway = Math.round(Math.sin(x * 0.35 + t * 2.4) + gust)
+    p.r(x, soil - h, 1, h, x % 6 === 0 ? GRASS.bladeLt : GRASS.blade)
+    p.p(x + sway, soil - 1 - h, GRASS.tip)
+  }
+}
 
 function drawGrass(p: Px, t: number) {
-  p.r(0, G + 2, LOGICAL_W, 3, GRASS.soil)
-  p.r(0, G + 2, LOGICAL_W, 1, GRASS.base)
-  for (let x = 0; x < LOGICAL_W; x += 3) {
-    const h = 2 + ((x * 7) % 3)
-    const sway = Math.round(Math.sin(x * 0.35 + t * 2.4))
-    p.r(x, G + 2 - h, 1, h, x % 6 === 0 ? GRASS.bladeLt : GRASS.blade)
-    p.p(x + sway, G + 1 - h, GRASS.tip)
-  }
+  grassInto(p, G + 2 - BLADE_ROWS, LOGICAL_W, 3 + BLADE_ROWS, t, 0)
+}
+
+// Logical height of the strip's grass band. Sized so the soil line sits where
+// a porter's own ground would be (G is 12 rows off the sprite's bottom edge),
+// which puts the porters' feet in the grass rather than above or under it.
+export const GRASS_BAND_H = 12
+
+export function drawGrassBand(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  t: number,
+  gust = 0,
+): void {
+  ctx.clearRect(0, 0, width, GRASS_BAND_H)
+  grassInto(new Px(ctx), 0, width, GRASS_BAND_H, t, gust)
 }
 
 // ---------------------------------------------------------------- crates

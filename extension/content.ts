@@ -1,8 +1,16 @@
 // Bokka content script: a strip of pixel porters walking along the bottom of
 // the window while you work the sprint board. Pointer events pass straight
-// through to the page — only the small 歩荷 pill is interactive.
+// through to the page — only the small Bokka pill is interactive.
 
-import { drawPorter, porterState, LOGICAL_W, LOGICAL_H, STATE_LABEL } from '../src/porter/porter.ts'
+import {
+  drawPorter,
+  drawGrassBand,
+  porterState,
+  GRASS_BAND_H,
+  LOGICAL_W,
+  LOGICAL_H,
+  STATE_LABEL,
+} from '../src/porter/porter.ts'
 import { syncRepo, type MemberLoad } from '../src/github.ts'
 import { logoElement } from '../src/porter/logo.ts'
 import { scrapeBoard, collectBoardDiagnostics, maybeRefreshLive } from './board.ts'
@@ -71,7 +79,7 @@ function makeUi(): void {
   style.textContent = `
     .strip { position: relative; height: ${SPRITE_H + 16}px; pointer-events: none; }
     .strip.hidden { display: none; }
-    .grass { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 18px;
+    .grass { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: ${GRASS_BAND_H}px;
              image-rendering: pixelated; pointer-events: none; z-index: 2; }
     .porter { position: absolute; bottom: 0; width: ${SPRITE_W}px; pointer-events: none;
               transition: none; will-change: transform; z-index: 1; }
@@ -288,24 +296,17 @@ function walkSpeed(member: MemberLoad): number {
 function drawGrassStrip(t: number): void {
   const ctx = grass.getContext('2d')
   if (!ctx) return
-  const PIX = 3
-  const gw = Math.ceil(window.innerWidth / PIX)
-  if (grass.width !== gw || grass.height !== 6) {
+  // one logical grass pixel per CSS pixel: the porters are drawn at SCALE, but
+  // downsampling the blades to 0.62px drops every other one and turns the band
+  // to mush, so the grass keeps the same pixel size it has under a lone porter
+  const gw = Math.ceil(window.innerWidth)
+  if (grass.width !== gw || grass.height !== GRASS_BAND_H) {
     grass.width = gw
-    grass.height = 6
+    grass.height = GRASS_BAND_H
   }
   ctx.imageSmoothingEnabled = false
-  ctx.clearRect(0, 0, gw, 6)
   const gust = Math.sin(t * 0.9) * 0.6 + Math.sin(t * 0.23) * 0.4
-  ctx.fillStyle = '#3c5a33'
-  ctx.fillRect(0, 5, gw, 1)
-  for (let x = 0; x < gw; x += 2) {
-    const h = 2 + ((x * 7) % 4)
-    const sway = Math.round((Math.sin(x * 0.22 + t * 2.6) + gust) * 1.5)
-    ctx.fillStyle = x % 6 === 0 ? '#7fb35e' : x % 4 === 0 ? '#a4d47c' : '#5d9948'
-    ctx.fillRect(x, 6 - h, 1, h)
-    ctx.fillRect(x + sway, 5 - h, 1, 2)
-  }
+  drawGrassBand(ctx, gw, t, gust)
 }
 
 function startLoop(): void {

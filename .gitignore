@@ -2,5 +2,6 @@ node_modules
 dist
 dist-extension
 dist-extension-firefox
+dist-packages
 .DS_Store
 *.log

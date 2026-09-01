@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bokka store shot — board</title>
+<!-- Store-screenshot harness. A cosmetic stand-in for a GitHub Projects v2
+     board (no data-testids needed: __BOKKA_FAKE_MEMBERS__ short-circuits
+     scraping in content.ts), sized for the 1280x800 store slot.
+     ?set=hero|overload|healthy picks the team. Fictional logins throughout. -->
+<style>
+  :root {
+    --fg: #1f2328; --muted: #59636e; --border: #d1d9e0;
+    --subtle: #f6f8fa; --accent: #0969da;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #fff; color: var(--fg);
+    font: 14px/1.5 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header.top {
+    background: #1f2328; color: #f0f6fc; padding: 10px 24px;
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+  }
+  .mark { width: 20px; height: 20px; border-radius: 50%; background: #f0f6fc; }
+  .crumb { opacity: .85; }
+  .crumb b { font-weight: 600; opacity: 1; }
+  .projhead { padding: 14px 24px 0; }
+  .projhead h1 { margin: 0; font-size: 20px; font-weight: 600; }
+  .projhead .meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  nav.tabs { display: flex; gap: 4px; padding: 12px 24px 0; border-bottom: 1px solid var(--border); }
+  nav.tabs span {
+    padding: 6px 12px; font-size: 13px; color: var(--muted);
+    border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0;
+  }
+  nav.tabs span.on {
+    color: var(--fg); font-weight: 600; background: #fff;
+    border-color: var(--border); margin-bottom: -1px;
+  }
+  .filterbar {
+    display: flex; align-items: center; gap: 8px; padding: 10px 24px;
+    border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted);
+  }
+  .filterbar .box {
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+    background: var(--subtle); flex: 1; max-width: 380px;
+  }
+  .board { display: flex; gap: 12px; padding: 16px 24px; align-items: flex-start; }
+  .col {
+    flex: 1; background: var(--subtle); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px; min-width: 0;
+  }
+  .col h3 {
+    margin: 2px 4px 8px; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .col h3 .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .col h3 .n { color: var(--muted); font-weight: 400; }
+  .card {
+    background: #fff; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; margin-bottom: 8px; font-size: 12.5px;
+    box-shadow: 0 1px 0 rgba(31,35,40,.04);
+  }
+  .card .t { display: block; margin-bottom: 6px; line-height: 1.35; }
+  .card .row { display: flex; align-items: center; gap: 6px; }
+  .num { color: var(--muted); font-size: 11px; }
+  .chip {
+    border-radius: 20px; padding: 0 8px; font-size: 10.5px; line-height: 18px;
+    background: #ddf4ff; color: #0550ae; border: 1px solid rgba(5,80,174,.15);
+  }
+  .chip.sz { background: #fff8c5; color: #7d4e00; border-color: rgba(125,78,0,.15); }
+  .av {
+    width: 20px; height: 20px; border-radius: 50%; margin-left: auto;
+    color: #fff; font-size: 10px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="mark"></div>
+  <span class="crumb">acme-labs / <b>platform</b></span>
+  <span class="crumb" style="margin-left:auto">Projects</span>
+</header>
+
+<div class="projhead">
+  <h1>Sprint 24 — Platform</h1>
+  <div class="meta">Updated 4 minutes ago · 31 items</div>
+</div>
+
+<nav class="tabs">
+  <span class="on">Board</span><span>Table</span><span>Roadmap</span><span>By assignee</span>
+</nav>
+
+<div class="filterbar">
+  <div class="box">is:open sprint:@current</div>
+  <span>Group: Status</span><span>·</span><span>Slice: none</span>
+</div>
+
+<div class="board" id="board"></div>
+
+<script>
+  const TEAM = {
+    'noor':     { color: '#8250df', initial: 'N' },
+    'mira-k':   { color: '#1a7f37', initial: 'M' },
+    'tomasz':   { color: '#0969da', initial: 'T' },
+    'priya-n':  { color: '#bf3989', initial: 'P' },
+    'dcarter':  { color: '#9a6700', initial: 'D' },
+    'wu-lin':   { color: '#cf222e', initial: 'W' },
+  }
+
+  const COLUMNS = [
+    { name: 'Todo', dot: '#9a6700', cards: [
+      ['Retry queue backoff is exponential-forever', 412, 'sp:5', 'wu-lin'],
+      ['Split billing cron into per-tenant jobs', 418, 'sp:8', 'dcarter'],
+      ['Audit log write amplification', 421, 'sp:13', 'wu-lin'],
+      ['Spike: replace the editor', 425, null, null],
+      ['Drop legacy webhook signer', 430, 'sp:3', 'mira-k'],
+      ['Per-region read replicas', 437, 'sp:13', 'dcarter'],
+    ]},
+    { name: 'In progress', dot: '#0969da', cards: [
+      ['Rewrite the sync engine scheduler', 388, 'sp:13', 'wu-lin'],
+      ['Tenant-aware rate limiting', 401, 'sp:8', 'priya-n'],
+      ['Dark mode for the settings surface', 396, 'Size: L', 'dcarter'],
+      ['Flaky auth test on CI', 433, 'sp:2', 'tomasz'],
+      ['Session revocation on password reset', 405, 'sp:5', 'priya-n'],
+      ['Trace sampling for slow queries', 409, 'Size: M', 'wu-lin'],
+    ]},
+    { name: 'In review', dot: '#8250df', cards: [
+      ['Cache warm-up on cold deploys', 377, 'sp:8', 'priya-n'],
+      ['Move uploads off the request path', 380, 'sp:5', 'tomasz'],
+      ['Fix N+1 in the members query', 391, 'sp:3', 'mira-k'],
+      ['Idempotency keys on the write path', 384, 'sp:8', 'wu-lin'],
+      ['Drop the synchronous audit write', 372, 'sp:5', 'dcarter'],
+      ['Docs: estimate field conventions', 369, 'sp:1', 'noor'],
+    ]},
+    { name: 'Done', dot: '#1a7f37', cards: [
+      ['Bump toolchain to Node 22', 352, 'sp:2', 'noor'],
+      ['Onboarding email template', 361, 'sp:5', 'noor'],
+      ['Backfill missing estimates', 366, 'sp:5', 'noor'],
+      ['Retire the v1 status endpoint', 344, 'sp:8', 'priya-n'],
+      ['Move CI to the shared runner pool', 338, 'sp:3', 'tomasz'],
+      ['Deflake the billing integration suite', 331, 'sp:5', 'mira-k'],
+    ]},
+  ]
+
+  const board = document.getElementById('board')
+  for (const col of COLUMNS) {
+    const el = document.createElement('div')
+    el.className = 'col'
+    el.innerHTML = `<h3><span class="dot" style="background:${col.dot}"></span>${col.name}
+      <span class="n">${col.cards.length}</span></h3>`
+    for (const [title, num, pts, who] of col.cards) {
+      const c = document.createElement('div')
+      c.className = 'card'
+      const m = who ? TEAM[who] : null
+      c.innerHTML = `<span class="t">${title}</span><div class="row">
+        <span class="num">#${num}</span>
+        ${pts ? `<span class="chip${pts.startsWith('Size') ? ' sz' : ''}">${pts}</span>` : ''}
+        ${m ? `<span class="av" style="background:${m.color}" title="${who}">${m.initial}</span>` : ''}
+      </div>`
+      el.append(c)
+    }
+    board.append(el)
+  }
+
+  // ---- the porters ---------------------------------------------------------
+  localStorage.setItem('bokka-ext', JSON.stringify({ capacity: 24, maxPorters: 8 }))
+
+  const SETS = {
+    // the whole load ladder in one frame: resting -> flattened
+    hero: [
+      { login: 'noor',    openPoints: 0,  openIssues: 0,  deliveredPoints: 12, deliveredIssues: 3 },
+      { login: 'mira-k',  openPoints: 7,  openIssues: 2,  deliveredPoints: 5,  deliveredIssues: 2 },
+      { login: 'tomasz',  openPoints: 15, openIssues: 4,  deliveredPoints: 8,  deliveredIssues: 2 },
+      { login: 'priya-n', openPoints: 23, openIssues: 6,  deliveredPoints: 8,  deliveredIssues: 2 },
+      { login: 'dcarter', openPoints: 31, openIssues: 8,  deliveredPoints: 0,  deliveredIssues: 0 },
+      { login: 'wu-lin',  openPoints: 44, openIssues: 11, deliveredPoints: 0,  deliveredIssues: 0 },
+    ],
+    // "this sprint is overcommitted" — the pitch for the whole extension
+    overload: [
+      { login: 'priya-n', openPoints: 26, openIssues: 7,  deliveredPoints: 3, deliveredIssues: 1 },
+      { login: 'dcarter', openPoints: 34, openIssues: 9,  deliveredPoints: 0, deliveredIssues: 0 },
+      { login: 'wu-lin',  openPoints: 47, openIssues: 12, deliveredPoints: 0, deliveredIssues: 0 },
+    ],
+    // a sprint that is actually plannable
+    healthy: [
+      { login: 'noor',    openPoints: 4,  openIssues: 1, deliveredPoints: 12, deliveredIssues: 4 },
+      { login: 'mira-k',  openPoints: 9,  openIssues: 3, deliveredPoints: 5,  deliveredIssues: 2 },
+      { login: 'tomasz',  openPoints: 14, openIssues: 4, deliveredPoints: 8,  deliveredIssues: 3 },
+      { login: 'priya-n', openPoints: 18, openIssues: 5, deliveredPoints: 6,  deliveredIssues: 2 },
+    ],
+  }
+  const set = new URLSearchParams(location.search).get('set') || 'hero'
+  window.__BOKKA_FAKE_MEMBERS__ = SETS[set] ?? SETS.hero
+</script>
+<script type="module" src="/extension/content.ts"></script>
+</body>
+</html>
