@@ -45,9 +45,9 @@ Bokka sends network requests to exactly two destinations, both of them GitHub:
 
 - **`https://api.github.com`** — to list issues for a repository, unauthenticated.
   Bokka has no field anywhere in its interface for a GitHub token or password,
-  and never asks for one. (If a build before this one stored a token, Bokka
-  still reads it and sends it in the `Authorization` header of these requests —
-  only to GitHub. Clearing the extension's storage removes it.)
+  never asks for one, and sends no `Authorization` header on any request.
+  GitHub serves this API with `Access-Control-Allow-Origin: *`, so Bokka reaches
+  it under ordinary CORS and asks for no host permission to do so.
 - **`https://github.com`** — same-origin requests to the project data endpoint
   that the page you are viewing already uses, authenticated by your existing
   browser session.
@@ -66,11 +66,15 @@ entirely your choice.
 
 ## Permissions
 
+Bokka requests one permission and one site.
+
 | Permission | Why it is needed |
 | --- | --- |
 | `storage` | Save your settings on your device |
-| `https://api.github.com/*` | Read issues and their assignees/labels for the repo whose page you are on |
 | Content script on `https://github.com/*` | Draw the porter strip and read sprint data from the board you are viewing |
+
+It requests no host permission for `api.github.com`: those calls are
+unauthenticated and CORS already allows them, so there is nothing to grant.
 
 ## Changes
 

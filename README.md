@@ -53,7 +53,10 @@ you overdo it, and celebrate when their issues get closed.
 2. **Repo pages** — infers `owner/repo` from the URL and reads issues from the
    public REST API, unauthenticated. The extension has no field for a token or
    an account anywhere in its interface, so private repos are covered by the
-   board strategies above rather than by the API.
+   board strategies above rather than by the API. GitHub allows 60
+   unauthenticated calls an hour, so this path polls at most once a minute and
+   backs off exponentially to 30 minutes after an error — a rate-limited or
+   missing repo is never retried in a loop.
 3. Anywhere else — the pill sits idle until you open a board or repo.
 
 ### Build from source
@@ -71,7 +74,7 @@ install the signed build from the store instead.
 - **Firefox / Zen**: `about:debugging` → This Firefox/Zen → **Load Temporary
   Add-on** → `dist-extension-firefox/manifest.json`. Temporary add-ons are
   removed when the browser restarts, which is why a store install is the better
-  route once one exists. Needs Firefox 140 or newer.
+  route once one exists. Needs Firefox 142 or newer.
 
 The strip:
 
@@ -125,22 +128,12 @@ Both are shared verbatim between the web app and the extension. Next targets:
 3. **Projects v2 Estimate field** — GraphQL adapter for teams that use the
    native estimate instead of point labels
 
-## Publishing
+## Packages
 
-`npm run build:ext` also writes store-ready zips to `dist-packages/`:
-
-| File | Goes to |
-| --- | --- |
-| `bokka-chrome-<version>.zip` | Chrome Web Store, and Edge Add-ons unchanged |
-| `bokka-firefox-<version>.zip` | Firefox AMO (listed, or unlisted for a signed self-hosted `.xpi`) |
-| `bokka-source-<version>.zip` | AMO's mandatory source upload — `content.js` is an esbuild bundle, so reviewers must be able to rebuild it |
-
-Archives use fixed timestamps, so a rebuild of the same commit is byte-identical
-— which is what lets an AMO reviewer verify the source zip against the package.
-
-Listing copy, permission justifications, reviewer notes and the submission
-checklist live in [STORE-LISTING.md](STORE-LISTING.md). Firefox accepts the
-privacy policy as inline text; Chrome and Edge both require it at a public URL.
+`npm run build:ext` also writes zips to `dist-packages/`: one per browser, plus
+a source archive of the tree it was built from. Every archive uses fixed
+timestamps, so rebuilding the same commit reproduces it byte for byte — anyone
+can check a published package against this source.
 
 ## Dev checks
 
@@ -159,7 +152,10 @@ npm run shots
 
 No backend, no analytics, no remote code, and no credential field anywhere in
 the extension. Settings stay on your device, and the only network requests go to
-GitHub itself. Full detail in [PRIVACY.md](PRIVACY.md).
+GitHub itself. The manifest asks for one permission (`storage`) and one site
+(a content script on `github.com`) — there is no `host_permissions` key, since
+the unauthenticated `api.github.com` calls are already allowed by CORS. Full
+detail in [PRIVACY.md](PRIVACY.md).
 
 ## Contact
 
