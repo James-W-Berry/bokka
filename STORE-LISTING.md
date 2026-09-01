@@ -55,9 +55,9 @@ the zips land in `dist-packages/`.
 **Privacy policy:** AMO takes the text of `PRIVACY.md` inline, so Firefox needs
 nothing hosted. Chrome requires a public *URL* — see the blocker below.
 
-**Support email:** `hellobokka@protonmail.com` — goes in AMO's support-email field and Chrome's
-developer contact. It is the address `PRIVACY.md` points at, so it has to stay
-reachable for as long as the add-on is listed.
+**Support email:** `hellobokka@protonmail.com` — goes in AMO's support-email
+field and Chrome's developer contact. It is the address `PRIVACY.md` points at,
+so it has to stay reachable for as long as the add-on is listed.
 
 ---
 
