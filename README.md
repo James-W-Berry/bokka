@@ -5,6 +5,12 @@ porter who hauls supplies to remote huts on a wooden pack frame — and every
 sprint point is cargo on their back. As load passes team capacity, the porter's
 animations get more dramatic, all the way to being flattened under the pile.
 
+## Install
+
+Bokka is being submitted to Firefox Add-ons; the install link lands here once
+it clears review. Chrome and Edge follow after that. Until then, see
+[build from source](#build-from-source) below.
+
 ## States
 
 | Load vs capacity | State | What you see |
@@ -17,7 +23,7 @@ animations get more dramatic, all the way to being flattened under the pile.
 | > 1.5× | Flattened… | Face-down under a cargo mound, dizzy stars |
 | sprint complete | Delivered! | Jumping celebration (manual mode) |
 
-## Browser extension (the product)
+## Browser extension
 
 The porters live at the bottom of the window while you work the sprint board —
 they wander around, trudge slower as you pile tickets on them, collapse when
@@ -43,29 +49,28 @@ you overdo it, and celebrate when their issues get closed.
    If neither strategy can read a project page, the pill shows `?` — clicking
    it copies a structure fingerprint (element/test-id counts only, no ticket
    content) to paste into a bug report so scraping can be fixed.
-2. **Repo pages** — infers `owner/repo` from the URL and uses the public REST
-   API (a token is only ever needed here, for private repos, as an optional
-   setting).
+2. **Repo pages** — infers `owner/repo` from the URL and reads issues from the
+   public REST API, unauthenticated. The extension has no field for a token or
+   an account anywhere in its interface, so private repos are covered by the
+   board strategies above rather than by the API.
 3. Anywhere else — the pill sits idle until you open a board or repo.
+
+### Build from source
 
 ```sh
 npm install
 npm run build:ext
 ```
 
-This produces two load-ready builds plus the store zips in `dist-packages/`
-(`bokka-chrome-<version>.zip`, `bokka-firefox-<version>.zip`, and
-`bokka-source-<version>.zip` for AMO review). The version comes from
-`package.json` and is stamped into both manifests — bump it there only.
+Load the result unpacked — this is the development path; for everyday use,
+install the signed build from the store instead.
 
 - **Chrome / Edge**: `chrome://extensions` → Developer mode → **Load unpacked**
   → `dist-extension/`
 - **Firefox / Zen**: `about:debugging` → This Firefox/Zen → **Load Temporary
   Add-on** → `dist-extension-firefox/manifest.json`. Temporary add-ons are
-  removed on restart; for a permanent install either set
-  `xpinstall.signatures.required = false` in `about:config` (works in Firefox
-  forks like Zen) or sign the zip via AMO self-distribution. The build is
-  `web-ext lint` clean (0 errors, 0 warnings), needs Firefox ≥ 140.
+  removed when the browser restarts, which is why a store install is the better
+  route once one exists. Needs Firefox 140 or newer.
 
 The strip:
 
@@ -86,9 +91,9 @@ count what's rendered.
 npm run dev
 ```
 
-## GitHub mode (the MVP)
+## GitHub mode
 
-Point it at any repo (`owner/name`) and hit **Sync**:
+The web app's data source. Point it at any repo (`owner/name`) and hit **Sync**:
 
 - Every issue **assignee** becomes a porter; unassigned issues pile onto an
   "Unassigned" porter.
@@ -96,8 +101,9 @@ Point it at any repo (`owner/name`) and hit **Sync**:
   bare `3` — unlabeled issues fall back to a configurable default.
 - Open issues are cargo in transit; issues closed within the sprint window
   (default 14 days) count as delivered.
-- Optional milestone filter and a personal access token for private repos /
-  rate limits. The token never leaves the browser (localStorage).
+- Optional milestone filter, and — in the web app only, not the extension — a
+  personal access token for private repos or higher rate limits. The token is
+  kept in `localStorage` and sent to nobody but GitHub.
 
 Deep links work as live widgets: `/?repo=owner/name` auto-syncs on load.
 
@@ -132,10 +138,8 @@ Archives use fixed timestamps, so a rebuild of the same commit is byte-identical
 — which is what lets an AMO reviewer verify the source zip against the package.
 
 Listing copy, permission justifications, reviewer notes and the submission
-checklist live in [STORE-LISTING.md](STORE-LISTING.md); the policy is
-[PRIVACY.md](PRIVACY.md). Firefox is the path that can ship from a private
-repo — AMO takes the policy inline, while Chrome and Edge need it at a public
-URL first.
+checklist live in [STORE-LISTING.md](STORE-LISTING.md). Firefox accepts the
+privacy policy as inline text; Chrome and Edge both require it at a public URL.
 
 ## Dev checks
 
@@ -149,3 +153,13 @@ npm run dev  →  /test/strip.html
 # store screenshots (1280x800) into screenshots/, fictional team, no network:
 npm run shots
 ```
+
+## Privacy
+
+No backend, no analytics, no remote code, and no credential field anywhere in
+the extension. Settings stay on your device, and the only network requests go to
+GitHub itself. Full detail in [PRIVACY.md](PRIVACY.md).
+
+## License
+
+MIT — see [LICENSE](LICENSE).

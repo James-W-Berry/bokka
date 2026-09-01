@@ -17,8 +17,8 @@ Bokka stores your settings in your browser's extension storage
 | Porter count and optional login filter | Which teammates to show |
 | Hidden/shown state | Remembers whether you dismissed the strip |
 
-This data is never uploaded anywhere. It is removed when you uninstall the
-extension, and you can clear it any time from the extension's options page.
+This data is never uploaded anywhere, and it is removed when you uninstall the
+extension.
 
 ## What Bokka reads
 
@@ -32,8 +32,12 @@ labels or project fields. It does this in two ways:
    logged-in session (`credentials: 'same-origin'`), so board edits show up
    without a reload.
 
-Bokka does not read issue titles, descriptions, comments, or any other content,
-and it does not run on any site other than `github.com`.
+To find a point value, Bokka scans the text of a card, which means an issue
+title can pass through that check. Nothing of the sort is kept: what it retains
+per teammate is a login, an avatar URL, and four numbers — open points, open
+issues, delivered points, delivered issues. Issue titles, descriptions and
+comments are never stored, and never leave your browser. Bokka does not run on
+any site other than `github.com`.
 
 ## What Bokka sends, and to whom
 
@@ -71,5 +75,5 @@ choice.
 ## Changes
 
 Any change to this policy will be published in this file alongside a new
-extension version. Questions or concerns: open an issue on the project
-repository.
+extension version. Questions or concerns: use the support contact on the
+add-on's store listing.

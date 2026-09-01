@@ -1,4 +1,4 @@
-// Bokka porter engine v2 — framework-free 2.5D pixel-art renderer.
+// Bokka porter engine — framework-free 2.5D pixel-art renderer.
 // A mountain porter hauling cargo on a pack frame, drawn with 4-shade
 // material ramps, a top-left light source, articulated limbs, and animations
 // that escalate with load: bouncy walk → trudge → panting + sweat → trembling
