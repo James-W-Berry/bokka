@@ -2,7 +2,7 @@
   "name": "bokka",
   "private": true,
   "version": "1.0.0",
-  "description": "Bokka \u2014 a pixel-art sprint-load visualizer where every teammate is a mountain porter carrying their sprint points as cargo.",
+  "description": "Bokka — a pixel-art sprint-load visualizer where every teammate is a mountain porter carrying their sprint points as cargo.",
   "license": "MIT",
   "author": "James Berry <hellobokka@protonmail.com>",
   "type": "module",
@@ -21,6 +21,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "esbuild": "^0.25.12",
     "typescript": "^5.7.2",
     "vite": "^6.0.7"
   }

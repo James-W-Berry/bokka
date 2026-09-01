@@ -14,18 +14,20 @@
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; overflow: hidden;
   }
-  h1 { margin: 0 0 6px; font-size: 30px; font-weight: 600; letter-spacing: -.01em; }
-  p.sub { margin: 0 0 34px; color: #a89fb8; font-size: 15px; }
-  .ladder { display: flex; align-items: flex-end; gap: 8px; }
-  .cell { text-align: center; width: 168px; }
-  canvas { image-rendering: pixelated; width: 154px; height: 220px; display: block; margin: 0 auto; }
-  .pts { margin-top: 14px; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .state { font-size: 12.5px; color: #a89fb8; margin-top: 1px; }
+  /* sized so the seven cells span nearly the full 1280 and the composition
+     fills the 800px frame — a store card is mostly read at thumbnail size */
+  h1 { margin: 0 0 10px; font-size: 40px; font-weight: 600; letter-spacing: -.01em; }
+  p.sub { margin: 0 0 64px; color: #a89fb8; font-size: 18px; }
+  .ladder { display: flex; align-items: flex-end; gap: 4px; }
+  .cell { text-align: center; width: 172px; }
+  canvas { image-rendering: pixelated; width: 172px; height: 246px; display: block; margin: 0 auto; }
+  .pts { margin-top: 18px; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .state { font-size: 14.5px; color: #a89fb8; margin-top: 2px; }
   .cell.over .state { color: #f0a05a; }
   .cell.flat .state { color: #e8685a; }
   .cell.done .state { color: #7fc98a; }
-  .rule { width: 1120px; height: 1px; background: #2e2740; margin: 30px 0 0; }
-  .foot { margin-top: 14px; font-size: 13px; color: #7d7490; }
+  .rule { width: 1180px; height: 1px; background: #2e2740; margin: 52px 0 0; }
+  .foot { margin-top: 20px; font-size: 15px; color: #7d7490; }
 </style>
 </head>
 <body>

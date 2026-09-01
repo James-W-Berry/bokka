@@ -21,6 +21,7 @@ const SPRITE_W = Math.round(LOGICAL_W * SCALE)
 const SPRITE_H = Math.round(LOGICAL_H * SCALE)
 const POLL_MS = 60_000
 const MIN_SYNC_GAP_MS = 10_000
+const MAX_BACKOFF_MS = 30 * 60_000
 
 interface Sprite {
   member: MemberLoad
@@ -47,9 +48,18 @@ function setPill(text: string, err = false): void {
   pillText.textContent = text
   pill.classList.toggle('err', err)
 }
+
+// The strip only earns its pixels when someone is walking on it. Hidden covers
+// both cases the animation loop must skip: the user dismissed it, or there are
+// no porters — an empty grass band animating on every GitHub page is work
+// nobody asked for. The pill is a sibling of the strip, so it stays either way.
+function updateStripVisibility(): void {
+  strip.classList.toggle('hidden', settings.hidden || sprites.size === 0)
+}
 let syncing = false
 let source: 'board' | 'api' | 'none' = 'none'
 let lastRepo = ''
+let syncFailures = 0
 
 // first URL segments that can never be a repo owner
 const RESERVED = new Set([
@@ -152,7 +162,7 @@ function makeUi(): void {
     }
     settings.hidden = !settings.hidden
     void saveSettings({ hidden: settings.hidden })
-    strip.classList.toggle('hidden', settings.hidden)
+    updateStripVisibility()
   })
 
   shadow.append(style, strip, pill)
@@ -224,29 +234,39 @@ function applyMembers(members: MemberLoad[]): void {
 
   const total = picked.reduce((sum, m) => sum + m.openPoints, 0)
   setPill(`${total}pt`)
+  updateStripVisibility()
 }
 
 async function sync(repo: string, force = false): Promise<void> {
   if (!repo || syncing) return
-  const gap = force ? MIN_SYNC_GAP_MS : POLL_MS
+  if (repo !== lastRepo) syncFailures = 0
+  // GitHub allows 60 unauthenticated calls an hour, so a failing repo has to
+  // back off rather than ride the 5s re-evaluate
+  const gap = syncFailures
+    ? Math.min(POLL_MS * 2 ** (syncFailures - 1), MAX_BACKOFF_MS)
+    : force
+      ? MIN_SYNC_GAP_MS
+      : POLL_MS
   if (repo === lastRepo && Date.now() - lastSyncAt < gap) return
   syncing = true
+  // stamp the attempt, not the success — recording only successes would leave
+  // lastRepo unset after a 403/404 and retry it every 5 seconds forever
+  lastSyncAt = Date.now()
+  lastRepo = repo
   try {
-    const result = await syncRepo(
-      { repo, token: settings.token || undefined },
-      settings.defaultPointsPerIssue,
-      settings.sprintDays,
-    )
-    lastSyncAt = Date.now()
-    lastRepo = repo
+    const result = await syncRepo({ repo }, settings.defaultPointsPerIssue, settings.sprintDays)
+    syncFailures = 0
     applyMembers(result.members)
     pill.title = `Bokka — watching ${repo} via the GitHub API. Click to hide/show, Alt+click for settings`
   } catch (e) {
+    syncFailures++
     setPill('!', true)
     const msg = e instanceof Error ? e.message : String(e)
-    pill.title = /404|403/.test(msg)
-      ? `${msg} — private repo? Add a token via Alt+click`
-      : msg
+    pill.title = /403|429/.test(msg)
+      ? `${msg} — GitHub allows 60 unauthenticated API calls an hour. Project boards are read from the page itself and have no such limit.`
+      : /404/.test(msg)
+        ? `${msg} — Bokka reads public repos through the API; for a private one, open its project board instead.`
+        : msg
   } finally {
     syncing = false
   }
@@ -264,7 +284,7 @@ function evaluate(apiForce = false): void {
     pill.title = 'Bokka — reading this board live, no setup needed. Click to hide/show, Alt+click for settings'
     return
   }
-  const repo = inferRepo() || settings.repo
+  const repo = inferRepo()
   if (repo) {
     source = 'api'
     void sync(repo, apiForce || repo !== lastRepo)
@@ -313,8 +333,11 @@ function startLoop(): void {
   const start = performance.now()
   let prev = start
   const tick = (now: number) => {
+    // reschedule first so the early-out below keeps the loop alive
+    requestAnimationFrame(tick)
     const dt = Math.min(0.1, (now - prev) / 1000)
     prev = now
+    if (strip.classList.contains('hidden')) return
     const t = (now - start) / 1000
     drawGrassStrip(t)
     const minX = 6
@@ -344,7 +367,6 @@ function startLoop(): void {
         ground: false,
       })
     }
-    requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
 }
@@ -352,7 +374,7 @@ function startLoop(): void {
 async function main(): Promise<void> {
   settings = await loadSettings()
   makeUi()
-  strip.classList.toggle('hidden', settings.hidden)
+  updateStripVisibility()
   startLoop()
 
   // test seam: the harness page can inject canned members to skip the network.
@@ -383,7 +405,7 @@ async function main(): Promise<void> {
     const changed = JSON.stringify(s) !== JSON.stringify(settings)
     settings = s
     if (changed) {
-      strip.classList.toggle('hidden', s.hidden)
+      updateStripVisibility()
       evaluate(true)
     }
     return changed

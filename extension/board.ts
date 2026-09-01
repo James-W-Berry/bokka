@@ -438,7 +438,12 @@ function getBaseData(): BaseData {
     }
     if (id === 'memex-paginated-items-get-api-data') {
       walk(parsed, (n) => {
-        if (typeof n.url === 'string') base.liveUrl = n.url
+        // this gets fetched with the user's session, so pin it to a same-origin
+        // path: the first `url` walk() sees is the payload's own top-level one,
+        // and a leading `//` or `/\` would still resolve off-origin
+        if (!base.liveUrl && typeof n.url === 'string' && /^\/(?![/\\])/.test(n.url)) {
+          base.liveUrl = n.url
+        }
       })
     }
     extractItems(parsed, base)
