@@ -131,10 +131,11 @@ Both are shared verbatim between the web app and the extension. Next targets:
 Archives use fixed timestamps, so a rebuild of the same commit is byte-identical
 — which is what lets an AMO reviewer verify the source zip against the package.
 
-Listing copy, permission justifications and the submission checklist live in
-[STORE-LISTING.md](STORE-LISTING.md); the policy both stores require is
-[PRIVACY.md](PRIVACY.md) (Chrome needs it at a public URL, because the optional
-GitHub token counts as sensitive data).
+Listing copy, permission justifications, reviewer notes and the submission
+checklist live in [STORE-LISTING.md](STORE-LISTING.md); the policy is
+[PRIVACY.md](PRIVACY.md). Firefox is the path that can ship from a private
+repo — AMO takes the policy inline, while Chrome and Edge need it at a public
+URL first.
 
 ## Dev checks
 

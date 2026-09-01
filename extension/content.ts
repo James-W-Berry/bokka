@@ -121,7 +121,7 @@ function makeUi(): void {
       () => {
         setPill('copied!')
         pill.title =
-          'A parse report (logins/points/structure only, no ticket content) was copied to your clipboard — paste it to Claude to fix scraping. Also logged to the console.'
+          'A parse report (logins/points/structure only, no ticket content) was copied to your clipboard — paste it into a bug report so board parsing can be fixed. Also logged to the console.'
       },
       () => {
         setPill('console')

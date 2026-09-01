@@ -13,8 +13,6 @@ Bokka stores your settings in your browser's extension storage
 
 | Setting | Why |
 | --- | --- |
-| Repository (`owner/name`) | Which repo to read issues from |
-| GitHub personal access token (optional) | Only needed to read a private repo or raise your API rate limit |
 | Sprint capacity, sprint length, default points per issue | How heavy a porter's load looks |
 | Porter count and optional login filter | Which teammates to show |
 | Hidden/shown state | Remembers whether you dismissed the strip |
@@ -41,9 +39,11 @@ and it does not run on any site other than `github.com`.
 
 Bokka sends network requests to exactly two destinations, both of them GitHub:
 
-- **`https://api.github.com`** — to list issues for a repository. Your optional
-  personal access token is sent only in the `Authorization` header of these
-  requests, only to GitHub, and only when you have supplied one.
+- **`https://api.github.com`** — to list issues for a repository, unauthenticated.
+  Bokka has no field anywhere in its interface for a GitHub token or password,
+  and never asks for one. (If a build before this one stored a token, Bokka
+  still reads it and sends it in the `Authorization` header of these requests —
+  only to GitHub. Clearing the extension's storage removes it.)
 - **`https://github.com`** — same-origin requests to the project data endpoint
   that the page you are viewing already uses, authenticated by your existing
   browser session.
@@ -65,7 +65,7 @@ choice.
 | Permission | Why it is needed |
 | --- | --- |
 | `storage` | Save your settings on your device |
-| `https://api.github.com/*` | Read issues and their assignees/labels for the repo you point Bokka at |
+| `https://api.github.com/*` | Read issues and their assignees/labels for the repo whose page you are on |
 | Content script on `https://github.com/*` | Draw the porter strip and read sprint data from the board you are viewing |
 
 ## Changes
