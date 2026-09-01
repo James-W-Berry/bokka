@@ -61,8 +61,8 @@ If Bokka cannot read a project board, you can click the pill to copy a
 **structure fingerprint** — counts of page elements and test IDs, plus the
 logins and point totals it managed to parse. It never includes issue titles or
 other ticket content. This is copied to your clipboard by your explicit action
-and is not transmitted anywhere; sharing it in a bug report is entirely your
-choice.
+and is not transmitted anywhere; sending it to hellobokka@protonmail.com is
+entirely your choice.
 
 ## Permissions
 
@@ -75,5 +75,4 @@ choice.
 ## Changes
 
 Any change to this policy will be published in this file alongside a new
-extension version. Questions or concerns: use the support contact on the
-add-on's store listing.
+extension version. Questions or concerns: hellobokka@protonmail.com.

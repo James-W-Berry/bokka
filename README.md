@@ -48,7 +48,8 @@ you overdo it, and celebrate when their issues get closed.
      board; unknown predicates fail open rather than hiding anyone.
    If neither strategy can read a project page, the pill shows `?` — clicking
    it copies a structure fingerprint (element/test-id counts only, no ticket
-   content) to paste into a bug report so scraping can be fixed.
+   content). Send it to hellobokka@protonmail.com so board parsing can be
+   fixed.
 2. **Repo pages** — infers `owner/repo` from the URL and reads issues from the
    public REST API, unauthenticated. The extension has no field for a token or
    an account anywhere in its interface, so private repos are covered by the
@@ -159,6 +160,10 @@ npm run shots
 No backend, no analytics, no remote code, and no credential field anywhere in
 the extension. Settings stay on your device, and the only network requests go to
 GitHub itself. Full detail in [PRIVACY.md](PRIVACY.md).
+
+## Contact
+
+hellobokka@protonmail.com
 
 ## License
 
